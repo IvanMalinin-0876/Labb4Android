@@ -22,6 +22,7 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
     private Context context;
+    private GoogleCloudMessaging gcm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
             protected String doInBackground(Void... params) {
                 String msg = "";
                 try {
-                    GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
+                    gcm = GoogleCloudMessaging.getInstance(context);
                     String regid = gcm.register("602319958990");
                     return regid;
                 } catch (IOException e) {
