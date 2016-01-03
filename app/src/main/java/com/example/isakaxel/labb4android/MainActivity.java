@@ -13,16 +13,26 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements
+        GoogleApiClient.OnConnectionFailedListener{
     private Context context;
     private GoogleCloudMessaging gcm;
+    private GoogleSignInOptions googleSignInOptions;
+    private GoogleApiClient googleApiClient;
+    private GoogleSignInAccount userAccount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +50,35 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         context = getApplicationContext();
+
+        googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this, this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
+                .build();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Login intent
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
+        startActivityForResult(signInIntent, 9001);
+
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Login result
+        if (requestCode == 9001) {
+            userAccount = Auth.GoogleSignInApi.getSignInResultFromIntent(data).getSignInAccount();
+        }
     }
 
     @Override
@@ -78,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("hej", s);
             }
         }.execute(null, null, null);
+
     }
 
     @Override
@@ -100,5 +140,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
     }
 }
