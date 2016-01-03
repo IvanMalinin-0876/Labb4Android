@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -22,17 +23,23 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.OnConnectionFailedListener{
+        GoogleApiClient.OnConnectionFailedListener,
+        View.OnClickListener {
+
     private Context context;
     private GoogleCloudMessaging gcm;
     private GoogleSignInOptions googleSignInOptions;
     private GoogleApiClient googleApiClient;
     private GoogleSignInAccount userAccount;
+    private TextView helloWorld;
+    private FloatingActionButton fab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +48,9 @@ public class MainActivity extends AppCompatActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        helloWorld = (TextView) findViewById(R.id.textView);
+        findViewById(R.id.googleButton).setOnClickListener(this);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -49,9 +58,13 @@ public class MainActivity extends AppCompatActivity implements
                         .setAction("Action", null).show();
             }
         });
+        fab.setVisibility(View.GONE);
+        helloWorld.setVisibility(View.GONE);
+
         context = getApplicationContext();
 
         googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("602319958990-p52mb9lu57pr5iklbt7h76uvdvoob6hd.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
 
@@ -65,10 +78,7 @@ public class MainActivity extends AppCompatActivity implements
     protected void onStart() {
         super.onStart();
 
-        // Login intent
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
-        startActivityForResult(signInIntent, 9001);
-
+        //signIn();
     }
 
     @Override
@@ -77,7 +87,16 @@ public class MainActivity extends AppCompatActivity implements
 
         // Login result
         if (requestCode == 9001) {
-            userAccount = Auth.GoogleSignInApi.getSignInResultFromIntent(data).getSignInAccount();
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            if(result.isSuccess()) {
+                Log.i("intentResult", "success");
+                userAccount = result.getSignInAccount();
+                enableUI(true);
+            } else {
+                Log.i("intentResult", "" + result.getStatus().getStatusCode());
+                signOut();
+                revokeAccess();
+            }
         }
     }
 
@@ -87,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
         int errorCode = apiAvailability.isGooglePlayServicesAvailable(this);
 
-        if (errorCode != ConnectionResult.SUCCESS) {
+        /*if (errorCode != ConnectionResult.SUCCESS) {
             if (apiAvailability.isUserResolvableError(errorCode)) {
                 apiAvailability.getErrorDialog(this, errorCode, 1);
             } else {
@@ -116,8 +135,22 @@ public class MainActivity extends AppCompatActivity implements
             protected void onPostExecute(String s) {
                 Log.i("hej", s);
             }
-        }.execute(null, null, null);
+        }.execute(null, null, null);*/
 
+    }
+
+    public void enableUI(boolean isSignedIn) {
+        if(isSignedIn) {
+            Log.i("enableUI", "Signed in");
+            findViewById(R.id.googleButton).setVisibility(View.GONE);
+            helloWorld.setVisibility(View.VISIBLE);
+            fab.setVisibility(View.VISIBLE);
+        } else {
+            Log.i("enableUI", "not signed in");
+            findViewById(R.id.googleButton).setVisibility(View.VISIBLE);
+            helloWorld.setVisibility(View.GONE);
+            fab.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -144,6 +177,41 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.i("onConnectionFailed", "" + connectionResult.getErrorCode());
+    }
 
+    public void signIn() {
+        // Login intent
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
+        startActivityForResult(signInIntent, 9001);
+    }
+
+    private void signOut() {
+        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        enableUI(false);
+                    }
+                });
+    }
+
+    private void revokeAccess() {
+        Auth.GoogleSignInApi.revokeAccess(googleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        enableUI(false);
+                    }
+                });
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()) {
+            case R.id.googleButton:
+                signIn();
+                break;
+        }
     }
 }
