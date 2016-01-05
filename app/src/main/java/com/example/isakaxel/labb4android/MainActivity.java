@@ -1,11 +1,16 @@
 package com.example.isakaxel.labb4android;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -38,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements
     private GoogleSignInOptions googleSignInOptions;
     private GoogleApiClient googleApiClient;
     private GoogleSignInAccount userAccount;
+    private BroadcastReceiver gcmBroadcastReceiver;
     private TextView helloWorld;
     private FloatingActionButton fab;
 
@@ -72,13 +78,35 @@ public class MainActivity extends AppCompatActivity implements
                 .enableAutoManage(this, this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
                 .build();
+
+        gcmBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                SharedPreferences sharedPreferences =
+                        PreferenceManager.getDefaultSharedPreferences(context);
+                boolean sentToken = sharedPreferences
+                        .getBoolean("sentTokenToServer", false);
+                if(sentToken) {
+                    Log.i("sentToken", "True");
+                } else {
+                    Log.i("sentToken", "Error");
+                }
+            }
+        };
+
+        if (hasPlayServices()) {
+            Log.i("hasPlayServices", "1");
+            Intent intent = new Intent(this, RegistrationIntentService.class);
+            Log.i("hasPlayServices", "2");
+            startService(intent);
+            Log.i("hasPlayServices", "3");
+        }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
 
-        //signIn();
     }
 
     @Override
@@ -103,40 +131,17 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-        int errorCode = apiAvailability.isGooglePlayServicesAvailable(this);
 
-        /*if (errorCode != ConnectionResult.SUCCESS) {
-            if (apiAvailability.isUserResolvableError(errorCode)) {
-                apiAvailability.getErrorDialog(this, errorCode, 1);
-            } else {
-                Log.i("onResume", "This device is not supported");
-                finish();
-            }
-        }
+        LocalBroadcastManager.getInstance(this).registerReceiver(gcmBroadcastReceiver,
+                new IntentFilter("registrationComplete"));
 
-        new AsyncTask<Void, Void, String>() {
 
-            @Override
-            protected String doInBackground(Void... params) {
-                String msg = "";
-                try {
-                    gcm = GoogleCloudMessaging.getInstance(context);
-                    String regid = gcm.register("602319958990");
-                    return regid;
-                } catch (IOException e) {
+    }
 
-                }
-
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(String s) {
-                Log.i("hej", s);
-            }
-        }.execute(null, null, null);*/
-
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(gcmBroadcastReceiver);
     }
 
     public void enableUI(boolean isSignedIn) {
@@ -145,6 +150,7 @@ public class MainActivity extends AppCompatActivity implements
             findViewById(R.id.googleButton).setVisibility(View.GONE);
             helloWorld.setVisibility(View.VISIBLE);
             fab.setVisibility(View.VISIBLE);
+            Log.i("Email", userAccount.getEmail());
         } else {
             Log.i("enableUI", "not signed in");
             findViewById(R.id.googleButton).setVisibility(View.VISIBLE);
@@ -178,6 +184,22 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.i("onConnectionFailed", "" + connectionResult.getErrorCode());
+    }
+
+    private boolean hasPlayServices() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int errorCode = apiAvailability.isGooglePlayServicesAvailable(this);
+
+        if (errorCode != ConnectionResult.SUCCESS) {
+            if (apiAvailability.isUserResolvableError(errorCode)) {
+                apiAvailability.getErrorDialog(this, errorCode, 1);
+            } else {
+                Log.i("onResume", "This device is not supported");
+                finish();
+            }
+            return false;
+        }
+        return true;
     }
 
     public void signIn() {

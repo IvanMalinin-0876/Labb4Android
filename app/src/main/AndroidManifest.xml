@@ -5,6 +5,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <permission android:name="com.example.isakaxel.labb4android.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+    <uses-permission android:name="com.example.isakaxel.labb4android.permission.C2D_MESSAGE" />
 
     <meta-data
         android:name="com.google.android.gms.version"
@@ -49,9 +53,9 @@
                 <action android:name="com.google.android.gms.iid.InstanceID" />
             </intent-filter>
         </service>
-
+        <service
+            android:name="com.example.isakaxel.labb4android.RegistrationIntentService"
+            android:exported="false">
+        </service>
     </application>
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <permission android:name="com.example.isakaxel.labb4android.permission.C2D_MESSAGE" android:protectionLevel="signature" />
-    <uses-permission android:name="com.example.isakaxel.labb4android.permission.C2D_MESSAGE" />
 </manifest>
