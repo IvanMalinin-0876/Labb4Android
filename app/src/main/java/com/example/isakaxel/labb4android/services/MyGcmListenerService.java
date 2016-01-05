@@ -1,4 +1,4 @@
-package com.example.isakaxel.labb4android;
+package com.example.isakaxel.labb4android.services;
 
 /**
  * Created by alf on 1/4/16.
@@ -14,6 +14,8 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.example.isakaxel.labb4android.R;
+import com.example.isakaxel.labb4android.activities.MainActivity;
 import com.google.android.gms.gcm.GcmListenerService;
 
 public class MyGcmListenerService extends GcmListenerService {

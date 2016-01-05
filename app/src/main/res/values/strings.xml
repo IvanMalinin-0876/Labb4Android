@@ -2,5 +2,6 @@
     <string name="app_name">Labb4Android</string>
     <string name="action_settings">Settings</string>
     <string name="server_web_id">602319958990-p52mb9lu57pr5iklbt7h76uvdvoob6hd.apps.googleusercontent.com</string>
+    <string name="title_activity_inbox">InboxActivity</string>
 
 </resources>

@@ -1,11 +1,10 @@
-package com.example.isakaxel.labb4android;
+package com.example.isakaxel.labb4android.activities;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
@@ -17,22 +16,20 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
 
+
+import com.example.isakaxel.labb4android.R;
+import com.example.isakaxel.labb4android.services.RegistrationIntentService;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-
-import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
@@ -44,7 +41,6 @@ public class MainActivity extends AppCompatActivity implements
     private GoogleApiClient googleApiClient;
     private GoogleSignInAccount userAccount;
     private BroadcastReceiver gcmBroadcastReceiver;
-    private TextView helloWorld;
     private FloatingActionButton fab;
 
     @Override
@@ -54,7 +50,6 @@ public class MainActivity extends AppCompatActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        helloWorld = (TextView) findViewById(R.id.textView);
         findViewById(R.id.googleButton).setOnClickListener(this);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -65,7 +60,6 @@ public class MainActivity extends AppCompatActivity implements
             }
         });
         fab.setVisibility(View.GONE);
-        helloWorld.setVisibility(View.GONE);
 
         context = getApplicationContext();
 
@@ -95,11 +89,8 @@ public class MainActivity extends AppCompatActivity implements
         };
 
         if (hasPlayServices()) {
-            Log.i("hasPlayServices", "1");
             Intent intent = new Intent(this, RegistrationIntentService.class);
-            Log.i("hasPlayServices", "2");
             startService(intent);
-            Log.i("hasPlayServices", "3");
         }
     }
 
@@ -119,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements
             if(result.isSuccess()) {
                 Log.i("intentResult", "success");
                 userAccount = result.getSignInAccount();
+                Log.i("ActivityResult", userAccount.getDisplayName());
                 enableUI(true);
             } else {
                 Log.i("intentResult", "" + result.getStatus().getStatusCode());
@@ -146,16 +138,12 @@ public class MainActivity extends AppCompatActivity implements
 
     public void enableUI(boolean isSignedIn) {
         if(isSignedIn) {
-            Log.i("enableUI", "Signed in");
-            findViewById(R.id.googleButton).setVisibility(View.GONE);
-            helloWorld.setVisibility(View.VISIBLE);
-            fab.setVisibility(View.VISIBLE);
-            Log.i("Email", userAccount.getEmail());
-        } else {
-            Log.i("enableUI", "not signed in");
-            findViewById(R.id.googleButton).setVisibility(View.VISIBLE);
-            helloWorld.setVisibility(View.GONE);
-            fab.setVisibility(View.GONE);
+            Intent inboxIntent = new Intent(this, InboxActivity.class);
+
+            inboxIntent.putExtra("displayName", userAccount.getDisplayName());
+            inboxIntent.putExtra("userEmail", userAccount.getEmail());
+
+            startActivity(inboxIntent);
         }
     }
 

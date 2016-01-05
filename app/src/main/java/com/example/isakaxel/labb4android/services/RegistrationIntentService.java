@@ -1,4 +1,4 @@
-package com.example.isakaxel.labb4android;
+package com.example.isakaxel.labb4android.services;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -31,6 +31,7 @@ public class RegistrationIntentService extends IntentService {
             // TODO: Implement this method to send any registration to your app's servers.
             //sendRegistrationToServer(token);
 
+            Log.i("RegIntent", token);
             sharedPreferences.edit().putBoolean("sentTokenToServer", true).apply();
 
         } catch (Exception e) {
