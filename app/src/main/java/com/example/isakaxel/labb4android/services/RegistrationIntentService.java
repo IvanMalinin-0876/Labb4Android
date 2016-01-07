@@ -7,8 +7,11 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.google.android.gms.gcm.GcmPubSub;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
+
+import java.io.IOException;
 
 /**
  * Created by alf on 1/4/16.
@@ -29,7 +32,7 @@ public class RegistrationIntentService extends IntentService {
             , null);
 
             // TODO: Implement this method to send any registration to your app's servers.
-            //sendRegistrationToServer(token);
+            sendRegistrationToServer(token);
 
             Log.i("RegIntent", token);
             sharedPreferences.edit().putBoolean("sentTokenToServer", true).apply();
@@ -46,6 +49,13 @@ public class RegistrationIntentService extends IntentService {
     // Modify this method to associate the user's GCM registration token with
     // any server-side account maintained by your application.
     private void sendRegistrationToServer(String token) {
-
+        String topic = "/topics/myTopic";
+        try {
+            GcmPubSub.getInstance(this).subscribe(token, topic, null);
+            Log.i("GcmPubSub", "Succeeded");
+        } catch (IOException e) {
+            Log.i("GcmPubSub", "unable to subscibe");
+            e.printStackTrace();
+        }
     }
 }

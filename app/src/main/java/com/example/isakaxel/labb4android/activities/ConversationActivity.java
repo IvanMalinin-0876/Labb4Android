@@ -27,7 +27,6 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
     private EditText inputMessage;
     private Button sendButton;
-    private Activity activity;
     private GoogleCloudMessaging gcm;
 
 
@@ -62,7 +61,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                         try {
                             Bundle data = new Bundle();
                             data.putString("my_message", "Hello World");
-                            data.putString("my_action","SAY_HELLO");
+                            data.putString("action","message");
+                            data.putString("topic", "myTopic");
                             String id = Integer.toString(4);
                             gcm.send("602319958990" + "@gcm.googleapis.com", id, data);
                             msg = "Sent message";
