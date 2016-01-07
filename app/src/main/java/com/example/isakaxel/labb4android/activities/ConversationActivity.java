@@ -60,7 +60,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                         String msg = "";
                         try {
                             Bundle data = new Bundle();
-                            data.putString("my_message", "Hello World");
+                            data.putString("message", "Hello World");
                             data.putString("action","message");
                             data.putString("topic", "myTopic");
                             String id = Integer.toString(4);
