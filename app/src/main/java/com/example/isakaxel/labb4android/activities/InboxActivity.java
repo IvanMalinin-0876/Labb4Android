@@ -1,5 +1,7 @@
 package com.example.isakaxel.labb4android.activities;
 
+import android.app.Application;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -30,8 +32,9 @@ public class InboxActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent newMessageIntent = new Intent(view.getContext(), ConversationActivity.class);
+                startActivity(newMessageIntent);
+
             }
         });
 
@@ -86,13 +89,13 @@ public class InboxActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(ConversationListViewHolder holder, int position) {
             String conversation = conversations.get(position);
-            holder.ConversationTextView.setText(conversation);
+            holder.conversationTextView.setText(conversation);
             holder.itemView.setTag(conversation);
 
             if(position % 2 == 0) {
-                holder.ConversationTextView.setBackgroundColor(Color.parseColor("#22000000"));
+                holder.conversationTextView.setBackgroundColor(Color.parseColor("#22000000"));
             } else {
-                holder.ConversationTextView.setBackground(null);
+                holder.conversationTextView.setBackground(null);
             }
         }
 
@@ -103,11 +106,11 @@ public class InboxActivity extends AppCompatActivity {
     }
 
     private class ConversationListViewHolder extends RecyclerView.ViewHolder {
-        public TextView ConversationTextView;
+        public TextView conversationTextView;
 
         public ConversationListViewHolder(View itemView) {
             super(itemView);
-            ConversationTextView = (TextView) itemView.findViewById(R.id.list_item_conversation_name);
+            conversationTextView = (TextView) itemView.findViewById(R.id.list_item_conversation_name);
         }
     }
 

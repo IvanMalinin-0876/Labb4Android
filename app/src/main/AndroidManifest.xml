@@ -62,12 +62,16 @@
         </service>
         <service
             android:name=".services.RegistrationIntentService"
-            android:exported="false"></service>
+            android:exported="false" />
 
         <activity
             android:name=".activities.InboxActivity"
             android:label="@string/title_activity_inbox"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.ConversationActivity"
+            android:label="@string/title_activity_conversation"
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>
