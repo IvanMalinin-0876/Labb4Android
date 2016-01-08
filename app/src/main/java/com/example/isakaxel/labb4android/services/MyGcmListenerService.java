@@ -33,6 +33,19 @@ public class MyGcmListenerService extends GcmListenerService {
     @Override
     public void onMessageReceived(String from, Bundle data) {
         String message = data.getString("message");
+        String action = (String) data.get("action");
+
+        switch (action){
+            case "message":
+                // Lägg till meddelandet i rätt chat.
+                break;
+            case "invite":
+                // Subscribe:a till topic och lägg till chatten i chatt listan.
+                break;
+            default:
+                break;
+        }
+
         Log.d(TAG, "From: " + from);
         Log.d(TAG, "Message: " + message);
 

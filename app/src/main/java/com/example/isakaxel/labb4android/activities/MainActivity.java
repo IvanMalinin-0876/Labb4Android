@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements
         };
 
         if (hasPlayServices()) {
+            Log.i("Play", "Play service exist.");
             Intent intent = new Intent(this, RegistrationIntentService.class);
             startService(intent);
         }
