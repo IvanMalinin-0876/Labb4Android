@@ -23,7 +23,7 @@ public class InboxActivity extends AppCompatActivity {
     private TextView displayName;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inbox);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -33,6 +33,7 @@ public class InboxActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent newMessageIntent = new Intent(view.getContext(), ConversationActivity.class);
+                newMessageIntent.putExtra("userEmail", getIntent().getExtras().getString("userEmail"));
                 startActivity(newMessageIntent);
 
             }

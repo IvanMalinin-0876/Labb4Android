@@ -64,6 +64,11 @@ public class RegistrationIntentService extends IntentService {
         }
 
         Log.i("regToServer", userEmail);
+        Intent loginIntent = new Intent(this, SendGcmService.class);
+        loginIntent.putExtra("userEmail", userEmail);
+        loginIntent.putExtra("message", "");
+        loginIntent.putExtra("action", "login");
+        // put topic
 
         // TEST CODE FOR LOGIN AND CREATE CHAT ACTIONS!
         /*new AsyncTask<Void, Void, String>() {

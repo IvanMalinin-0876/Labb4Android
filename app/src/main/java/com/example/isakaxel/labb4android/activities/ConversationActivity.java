@@ -1,6 +1,7 @@
 package com.example.isakaxel.labb4android.activities;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,6 +19,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.isakaxel.labb4android.R;
+import com.example.isakaxel.labb4android.services.RegistrationIntentService;
+import com.example.isakaxel.labb4android.services.SendGcmService;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import java.io.IOException;
@@ -54,30 +57,12 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             if(message != null) {
                 Log.i("Message to send", message);
                 // Send message
-                new AsyncTask<Void, Void, String>() {
-                    @Override
-                    protected String doInBackground(Void... params) {
-                        String msg = "";
-                        try {
-                            Bundle data = new Bundle();
-                            data.putString("message", "Hello World");
-                            data.putString("action","message");
-                            data.putString("topic", "myTopic");
-                            String id = Integer.toString(4);
-                            gcm.send("602319958990" + "@gcm.googleapis.com", id, data);
-                            msg = "Sent message";
-                        } catch (IOException ex) {
-                            msg = "Error :" + ex.getMessage();
-                        }
-                        return msg;
-                    }
-
-                    @Override
-                    protected void onPostExecute(String msg) {
-                        Log.i("onPostExecute", msg);
-                    }
-                }.execute(null, null, null);
-
+                Intent intent = new Intent(this, SendGcmService.class);
+                intent.putExtra("userEmail", getIntent().getExtras().getString("userEmail"));
+                intent.putExtra("message", message);
+                intent.putExtra("action", "message");
+                intent.putExtra("topic", "myTopic");
+                startService(intent);
             }
         }
     }

@@ -127,10 +127,7 @@ public class MainActivity extends AppCompatActivity implements
     public void enableUI(boolean isSignedIn) {
         if(isSignedIn) {
             Intent inboxIntent = new Intent(this, InboxActivity.class);
-
-            inboxIntent.putExtra("displayName", userAccount.getDisplayName());
             inboxIntent.putExtra("userEmail", userAccount.getEmail());
-
             startActivity(inboxIntent);
         }
     }
