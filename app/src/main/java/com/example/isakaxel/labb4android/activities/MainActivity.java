@@ -76,12 +76,6 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
         };
-
-        if (hasPlayServices()) {
-            Log.i("Play", "Play service exist.");
-            Intent intent = new Intent(this, RegistrationIntentService.class);
-            startService(intent);
-        }
     }
 
     @Override
@@ -100,8 +94,12 @@ public class MainActivity extends AppCompatActivity implements
             if(result.isSuccess()) {
                 Log.i("intentResult", "success");
                 userAccount = result.getSignInAccount();
-                Log.i("ActivityResult", userAccount.getDisplayName());
-                enableUI(true);
+                if (hasPlayServices()) {
+                    Intent intent = new Intent(this, RegistrationIntentService.class);
+                    intent.putExtra("userEmail", userAccount.getEmail());
+                    startService(intent);
+                    enableUI(true);
+                }
             } else {
                 Log.i("intentResult", "" + result.getStatus().getStatusCode());
                 signOut();

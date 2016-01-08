@@ -28,7 +28,6 @@ public class RegistrationIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        Log.i("RegIntentService", "hej");
         try {
             InstanceID instanceID = InstanceID.getInstance(this);
             String token = instanceID.getToken("602319958990", GoogleCloudMessaging.INSTANCE_ID_SCOPE
@@ -37,7 +36,7 @@ public class RegistrationIntentService extends IntentService {
             gcm = GoogleCloudMessaging.getInstance(this);
 
             // TODO: Implement this method to send any registration to your app's servers.
-            sendRegistrationToServer(token);
+            sendRegistrationToServer(token, intent.getStringExtra("userEmail"));
 
             Log.i("RegIntent", token);
             sharedPreferences.edit().putBoolean("sentTokenToServer", true).apply();
@@ -53,7 +52,7 @@ public class RegistrationIntentService extends IntentService {
 
     // Modify this method to associate the user's GCM registration token with
     // any server-side account maintained by your application.
-    private void sendRegistrationToServer(String token) {
+    private void sendRegistrationToServer(String token, String userEmail) {
         String topic = "/topics/myTopic";
 
         try {
@@ -63,6 +62,8 @@ public class RegistrationIntentService extends IntentService {
             Log.i("GcmPubSub", "unable to subscibe");
             e.printStackTrace();
         }
+
+        Log.i("regToServer", userEmail);
 
         // TEST CODE FOR LOGIN AND CREATE CHAT ACTIONS!
         /*new AsyncTask<Void, Void, String>() {
