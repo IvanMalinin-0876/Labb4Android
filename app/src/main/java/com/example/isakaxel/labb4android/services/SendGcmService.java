@@ -29,7 +29,7 @@ public class SendGcmService extends IntentService {
     /**
      * Skapa en intent som först skapar en topic (userID + antaltopics man är med i).
      * action för att skapa en topic = createChat.
-     * Sen när den är skapad ska en intent få en annan users email och skicka en invite.
+     * Sen när den är skapad ska en intent få en annan users email och skicka en invite (ska ske i den nya chatten på något vis).
      * action för skicka invite = invite.
      */
     private void sendGcm(Intent intent) {
@@ -37,6 +37,7 @@ public class SendGcmService extends IntentService {
         final String tpc = intent.getStringExtra("topic");
         final String message = intent.getStringExtra("message");
         final String mail = intent.getStringExtra("userEmail");
+        //final String otherUsersEmail = intent.getStringExtra("otherUsersEmail");
         Log.i("sendGcm", mail);
         new AsyncTask<Void, Void, String>() {
             @Override
@@ -48,6 +49,7 @@ public class SendGcmService extends IntentService {
                     data.putString("action", act);
                     data.putString("topic", tpc);
                     data.putString("email", mail);
+                    //data.putString("otherUsersEmail", otherUsersEmail);
                     String id = Integer.toString(4);
                     gcm.send("602319958990" + "@gcm.googleapis.com", id, data);
                     msg = "Sent message";
