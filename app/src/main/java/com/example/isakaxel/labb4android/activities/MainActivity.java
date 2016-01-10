@@ -7,8 +7,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -18,8 +16,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 
+import com.example.isakaxel.labb4android.Model.Model;
 import com.example.isakaxel.labb4android.R;
-import com.example.isakaxel.labb4android.services.MyGcmListenerService;
 import com.example.isakaxel.labb4android.services.RegistrationIntentService;
 import com.example.isakaxel.labb4android.services.SendGcmService;
 import com.google.android.gms.auth.api.Auth;
@@ -31,7 +29,6 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
@@ -72,13 +69,13 @@ public class MainActivity extends AppCompatActivity implements
                         PreferenceManager.getDefaultSharedPreferences(context);
                 boolean sentToken = sharedPreferences
                         .getBoolean("sentTokenToServer", false);
-                if(sentToken) {
+                if (sentToken) {
                     Log.i("sentToken", "True");
                 } else {
                     Log.i("sentToken", "Error");
                 }
                 appServerContact = sharedPreferences.getBoolean("serverLoginSuccess", false);
-                if(appServerContact) {
+                if (appServerContact) {
                     enableUI(appServerContact);
                 }
             }
@@ -99,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements
         // Login result
         if (requestCode == 9001) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            if(result.isSuccess()) {
+            if (result.isSuccess()) {
                 Log.i("intentResult", "success");
                 userAccount = result.getSignInAccount();
                 if (hasPlayServices()) {
@@ -136,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void enableUI(boolean isSignedIn) {
-        if(isSignedIn) {
+        if (isSignedIn) {
             Intent inboxIntent = new Intent(this, InboxActivity.class);
             inboxIntent.putExtra("userEmail", userAccount.getEmail());
             startActivity(inboxIntent);
@@ -214,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onClick(View v) {
-        switch(v.getId()) {
+        switch (v.getId()) {
             case R.id.googleButton:
                 signIn();
                 break;

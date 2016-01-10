@@ -10,6 +10,7 @@ import com.example.isakaxel.labb4android.activities.InboxActivity;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import java.io.IOException;
+import java.util.Random;
 
 /**
  * Created by alf on 1/8/16.
@@ -20,6 +21,7 @@ public class SendGcmService extends IntentService {
     public SendGcmService() {
         super("SendGcmService");
     }
+
     @Override
     protected void onHandleIntent(Intent intent) {
         gcm = GoogleCloudMessaging.getInstance(this);
@@ -50,7 +52,8 @@ public class SendGcmService extends IntentService {
                     data.putString("topic", tpc);
                     data.putString("email", mail);
                     //data.putString("otherUsersEmail", otherUsersEmail);
-                    String id = Integer.toString(4);
+                    Random rand = new Random();
+                    String id = Integer.toString(rand.nextInt(1000000));
                     gcm.send("602319958990" + "@gcm.googleapis.com", id, data);
                     msg = "Sent message";
                 } catch (IOException ex) {
@@ -58,6 +61,7 @@ public class SendGcmService extends IntentService {
                 }
                 return msg;
             }
+
             @Override
             protected void onPostExecute(String msg) {
                 Log.i("onPostExecute", msg);

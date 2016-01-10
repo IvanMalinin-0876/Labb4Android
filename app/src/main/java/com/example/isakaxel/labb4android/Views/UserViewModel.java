@@ -7,10 +7,12 @@ import java.util.HashSet;
  */
 public class UserViewModel {
     private String email;
+    private long id;
     private HashSet<TopicViewModel> topics;
 
-    public UserViewModel(String email, HashSet<TopicViewModel> topics){
+    public UserViewModel(String email, long id, HashSet<TopicViewModel> topics){
         this.email = email;
+        this.id = id;
         this.topics = topics;
     }
 
@@ -20,5 +22,9 @@ public class UserViewModel {
 
     public HashSet<TopicViewModel> getTopics() {
         return topics;
+    }
+
+    public long getId(){
+        return id;
     }
 }

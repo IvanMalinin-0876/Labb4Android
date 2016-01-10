@@ -31,7 +31,7 @@ public class RegistrationIntentService extends IntentService {
         try {
             InstanceID instanceID = InstanceID.getInstance(this);
             String token = instanceID.getToken("602319958990", GoogleCloudMessaging.INSTANCE_ID_SCOPE
-            , null);
+                    , null);
 
             gcm = GoogleCloudMessaging.getInstance(this);
 
@@ -53,10 +53,11 @@ public class RegistrationIntentService extends IntentService {
     // Modify this method to associate the user's GCM registration token with
     // any server-side account maintained by your application.
     private void sendRegistrationToServer(String token, String userEmail) {
-        String topic = "/topics/testtopic";
+        String topic = "/topics/badboys";
 
         try {
             GcmPubSub.getInstance(this).subscribe(token, topic, null);
+            GcmPubSub.getInstance(this).subscribe(token, "/topics/testtopic", null);
             Log.i("GcmPubSub", "Succeeded");
         } catch (IOException e) {
             Log.i("GcmPubSub", "unable to subscibe");

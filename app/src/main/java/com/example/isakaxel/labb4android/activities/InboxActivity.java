@@ -15,10 +15,17 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.isakaxel.labb4android.Model.JsonParser;
+import com.example.isakaxel.labb4android.Model.Message;
+import com.example.isakaxel.labb4android.Model.Model;
+import com.example.isakaxel.labb4android.Model.Topic;
 import com.example.isakaxel.labb4android.Model.Util;
 import com.example.isakaxel.labb4android.R;
+import com.example.isakaxel.labb4android.Views.MessageViewModel;
 import com.example.isakaxel.labb4android.Views.TopicViewModel;
 import com.example.isakaxel.labb4android.Views.UserViewModel;
+import com.google.android.gms.gcm.GcmPubSub;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.android.gms.iid.InstanceID;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,9 +38,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class InboxActivity extends AppCompatActivity {
-    private UserViewModel user;
     private ConversationListAdapter conversationAdapter;
     private RecyclerView inboxList;
+    private Model model;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -41,12 +48,13 @@ public class InboxActivity extends AppCompatActivity {
         setContentView(R.layout.activity_inbox);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        model = Model.prepModel(getIntent().getExtras().getString("userEmail"));
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent newMessageIntent = new Intent(view.getContext(), ConversationActivity.class);
-                newMessageIntent.putExtra("userEmail", getIntent().getExtras().getString("userEmail"));
+                newMessageIntent.putExtra("userEmail", model.getEmail());
                 startActivity(newMessageIntent);
 
             }
@@ -55,77 +63,15 @@ public class InboxActivity extends AppCompatActivity {
         inboxList = (RecyclerView) findViewById(R.id.activity_inbox_recyclerView);
         inboxList.setLayoutManager(new LinearLayoutManager(this));
 
-        conversationAdapter = new ConversationListAdapter();
+        conversationAdapter = new ConversationListAdapter(this, inboxList, model);
         inboxList.setAdapter(conversationAdapter);
 
-        callRest(getIntent().getStringExtra("userEmail"));
-    }
-
-    private class ConversationListAdapter extends RecyclerView.Adapter<ConversationListViewHolder> {
-
-        private HashSet<TopicViewModel> topics;
-
-        public ConversationListAdapter() {
-            topics = new HashSet<>();
-        }
-
-        public void addConversation(TopicViewModel topic) {
-            topics.add(topic);
-            notifyDataSetChanged();
-        }
-
-        @Override
-        public ConversationListViewHolder onCreateViewHolder(ViewGroup parent, final int viewType) {
-            View view = getLayoutInflater().inflate(R.layout.list_item_conversation, parent, false);
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    RecyclerView.ViewHolder holder = inboxList.getChildViewHolder(v);
-                    Log.i("onClick", "" + holder.getLayoutPosition());
-
-                    Intent conversationIntent = new Intent(v.getContext(), ConversationActivity.class);
-                    conversationIntent.putExtra("userEmail", getIntent().getExtras().getString("userEmail"));
-                    conversationIntent.putExtra("topic",
-                            JsonParser.getTopicJson(Util.getTopic(topics, holder.getLayoutPosition())));
-                    startActivity(conversationIntent);
-
-                }
-            });
-            return new ConversationListViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(ConversationListViewHolder holder, int position) {
-            String topicDisplayName;
-            if((topicDisplayName = Util.getTopic(topics, position).getDisplayName()) != null) {
-                holder.conversationTextView.setText(topicDisplayName);
-                holder.itemView.setTag(topicDisplayName);
-
-                if (position % 2 == 0) {
-                    holder.conversationTextView.setBackgroundColor(Color.parseColor("#22000000"));
-                } else {
-                    holder.conversationTextView.setBackground(null);
-                }
-            }
-        }
-
-        @Override
-        public int getItemCount() {
-            return topics.size();
-        }
-    }
-
-    private class ConversationListViewHolder extends RecyclerView.ViewHolder {
-        public TextView conversationTextView;
-
-        public ConversationListViewHolder(View itemView) {
-            super(itemView);
-            conversationTextView = (TextView) itemView.findViewById(R.id.list_item_conversation_name);
-        }
+        callRest(model.getEmail());
     }
 
     private void callRest(String email) {
         final String mail = email;
+        Log.i("inbox", "starting rest call");
         new AsyncTask<Void, Void, String>() {
 
             @Override
@@ -133,7 +79,7 @@ public class InboxActivity extends AppCompatActivity {
                 StringBuilder result = new StringBuilder();
                 HttpURLConnection urlConnection = null;
                 try {
-                    URL url = new URL("http://nightloyd.eu:8080/Labb4Server/rest/topic/getAllTopics?email=" + mail);
+                    URL url = new URL("http://192.168.0.4:8080/Labb4Server/rest/topic/getAllTopics?email=" + mail);
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.connect();
@@ -161,11 +107,26 @@ public class InboxActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(String result) {
                 // extract conversations and add them to the conversation adapter
-                user = JsonParser.getUserFromJson(result);
+                UserViewModel user = JsonParser.getUserFromJson(result);
                 Log.i("Result", result);
-                for (TopicViewModel topicViewModel : user.getTopics()) {
-                    Log.i("Topic", topicViewModel.getDisplayName());
-                    conversationAdapter.addConversation(topicViewModel);
+                if (user != null) {
+                    for (TopicViewModel tvm : user.getTopics()) {
+                        ArrayList<Message> messages = new ArrayList<Message>();
+                        for (MessageViewModel msg : tvm.getMessages()) {
+                            messages.add(new Message(msg.getId(), msg.getFrom(), msg.getTo(), msg.getMsg()));
+                        }
+                        model.addTopic(new Topic(tvm.getName(), tvm.getDisplayName(), messages, tvm.getMemberNames()));
+                    }
+                    Log.i("AddTopics", "" + model.getTopics().size());
+                    conversationAdapter.notifyDataSetChanged();
+                    model.setUserId(user.getId());
+                    try {
+                        String token = InstanceID.getInstance(InboxActivity.this).getToken("602319958990", GoogleCloudMessaging.INSTANCE_ID_SCOPE
+                                , null);
+                        GcmPubSub.getInstance(InboxActivity.this).subscribe(token, "/topics/" + user.getId(), null);
+                    } catch (IOException e){
+
+                    }
                 }
             }
         }.execute(null, null, null);

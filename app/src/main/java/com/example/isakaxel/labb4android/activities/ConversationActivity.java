@@ -23,6 +23,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.isakaxel.labb4android.Model.JsonParser;
+import com.example.isakaxel.labb4android.Model.Message;
+import com.example.isakaxel.labb4android.Model.Model;
+import com.example.isakaxel.labb4android.Model.Topic;
 import com.example.isakaxel.labb4android.Model.Util;
 import com.example.isakaxel.labb4android.R;
 import com.example.isakaxel.labb4android.Views.MessageViewModel;
@@ -43,7 +46,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
     private EditText inputMessage;
     private Button sendButton;
-    private TopicViewModel topic;
+    private Topic topic;
+    private Model model;
     private GoogleCloudMessaging gcm;
     private RecyclerView messageRecyclerView;
     private MessageListAdapter messageListAdapter;
@@ -55,21 +59,21 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         setContentView(R.layout.activity_conversation);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        topic = JsonParser.getTopicFromJson(getIntent().getStringExtra("topic"));
+        //topic = JsonParser.getTopicFromJson(getIntent().getStringExtra("topic"));
+        int topicPosition = getIntent().getIntExtra("topic", 0);
+        model = Model.getInstance();
+        topic = model.getTopic(topicPosition);
 
         this.setTitle(topic.getDisplayName());
 
         gcm = GoogleCloudMessaging.getInstance(this);
+        HashMap<Long, Message> messages = new HashMap<>();
+
 
         messageRecyclerView = (RecyclerView) findViewById(R.id.activity_conversation_recyclerView);
         messageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        messageListAdapter = new MessageListAdapter();
+        messageListAdapter = new MessageListAdapter(this, topic);
         messageRecyclerView.setAdapter(messageListAdapter);
-
-        for (MessageViewModel messageViewModel : topic.getMessages()) {
-            messageListAdapter.addMessage(messageViewModel);
-        }
-
 
         inputMessage = (EditText) findViewById(R.id.activity_conversation_message);
         sendButton = (Button) findViewById(R.id.activity_conversation_sendButton);
@@ -88,75 +92,19 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
     private BroadcastReceiver messageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent.getStringExtra("to").equals(topic.getName())) {
-                messageListAdapter.addMessage(new MessageViewModel(intent.getLongExtra("id", 0), intent.getStringExtra("from"),
-                        intent.getStringExtra("to"), intent.getStringExtra("message")));
-            }
+            messageListAdapter.notifyDataSetChanged();
         }
     };
 
-    private class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHolder> {
-        private HashMap<Long, MessageViewModel> messages;
-
-        public MessageListAdapter() {
-            messages = new HashMap<>();
-        }
-
-        public void addMessage(MessageViewModel message) {
-            messages.put((long)messages.size(), message);
-            notifyDataSetChanged();
-        }
-
-        @Override
-        public MessageListViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = getLayoutInflater().inflate(R.layout.list_item_message, parent, false);
-            return new MessageListViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(MessageListViewHolder holder, int position) {
-            MessageViewModel message;
-            if((message = messages.get((long)position)) != null) {
-                holder.messageFromTextView.setText(message.getFrom() + " said:");
-                holder.messageTextView.setText(message.getMsg());
-
-                if (position % 2 == 0) {
-                    holder.messageFromTextView.setBackgroundColor(Color.parseColor("#22000000"));
-                    holder.messageTextView.setBackgroundColor(Color.parseColor("#22000000"));
-                } else {
-                    holder.messageFromTextView.setBackground(null);
-                    holder.messageTextView.setBackground(null);
-                }
-            }
-        }
-
-        @Override
-        public int getItemCount() {
-            return messages.size();
-        }
-    }
-
-    private class MessageListViewHolder extends RecyclerView.ViewHolder {
-        public TextView messageFromTextView;
-        public TextView messageTextView;
-
-
-        public MessageListViewHolder(View itemView) {
-            super(itemView);
-            messageFromTextView = (TextView) itemView.findViewById(R.id.list_item_message_messageFrom);
-            messageTextView = (TextView) itemView.findViewById(R.id.list_item_message_message);
-        }
-    }
-
     @Override
     public void onClick(View v) {
-        if(v == sendButton) {
+        if (v == sendButton) {
             String message = inputMessage.getText().toString();
-            if(message != null) {
+            if (message != null) {
                 Log.i("Message to send", message + " from " + getIntent().getExtras().getString("userEmail"));
                 // Send message
                 Intent intent = new Intent(this, SendGcmService.class);
-                intent.putExtra("userEmail", getIntent().getExtras().getString("userEmail"));
+                intent.putExtra("userEmail", model.getEmail());
                 intent.putExtra("message", message);
                 intent.putExtra("action", "message");
                 intent.putExtra("topic", topic.getName());
