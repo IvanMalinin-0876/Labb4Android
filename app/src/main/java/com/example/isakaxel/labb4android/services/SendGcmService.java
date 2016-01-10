@@ -40,8 +40,7 @@ public class SendGcmService extends IntentService {
         final String message = intent.getStringExtra("message");
         final String mail = intent.getStringExtra("userEmail");
         final String tpcName = intent.getStringExtra("displayName");
-
-        //final String otherUsersEmail = intent.getStringExtra("otherUsersEmail");
+        final String otherUsersEmail = intent.getStringExtra("toInvite");
         Log.i("sendGcm", mail);
         new AsyncTask<Void, Void, String>() {
             @Override
@@ -54,7 +53,7 @@ public class SendGcmService extends IntentService {
                     data.putString("topic", tpc);
                     data.putString("email", mail);
                     data.putString("displayName", tpcName);
-                    //data.putString("otherUsersEmail", otherUsersEmail);
+                    data.putString("toInvite", otherUsersEmail);
                     Random rand = new Random();
                     String id = Integer.toString(rand.nextInt(1000000));
                     gcm.send("602319958990" + "@gcm.googleapis.com", id, data);

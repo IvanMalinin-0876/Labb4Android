@@ -82,6 +82,9 @@
         <activity
             android:name=".activities.NewTopicActivity"
             android:exported="false"/>
+        <activity
+            android:name=".activities.AddPersonToTopicActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

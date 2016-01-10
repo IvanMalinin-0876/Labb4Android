@@ -16,6 +16,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -59,7 +61,6 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         setContentView(R.layout.activity_conversation);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        //topic = JsonParser.getTopicFromJson(getIntent().getStringExtra("topic"));
         int topicPosition = getIntent().getIntExtra("topic", 0);
         model = Model.getInstance();
         topic = model.getTopic(topicPosition);
@@ -67,8 +68,6 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         this.setTitle(topic.getDisplayName());
 
         gcm = GoogleCloudMessaging.getInstance(this);
-        HashMap<Long, Message> messages = new HashMap<>();
-
 
         messageRecyclerView = (RecyclerView) findViewById(R.id.activity_conversation_recyclerView);
         messageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -114,5 +113,38 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_add_to_topic, menu);
+        return true;
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_add_to_topic) {
+            startActivityForResult(new Intent(this, AddPersonToTopicActivity.class), 2);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == 2) {
+            if(resultCode == Activity.RESULT_OK) {
+                Intent addPersonIntent = new Intent(this, SendGcmService.class);
+                addPersonIntent.putExtra("toInvite", data.getStringExtra("otherUsersEmail"));
+                Log.i("otherUsersEmail", data.getStringExtra("otherUsersEmail"));
+                addPersonIntent.putExtra("displayName", topic.getDisplayName());
+                addPersonIntent.putExtra("action", "invite");
+                addPersonIntent.putExtra("topic", topic.getName());
+                addPersonIntent.putExtra("userEmail", Model.getInstance().getEmail());
+                startService(addPersonIntent);
+            }
+        }
+    }
 }

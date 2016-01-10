@@ -110,7 +110,7 @@ public class InboxActivity extends AppCompatActivity {
                 StringBuilder result = new StringBuilder();
                 HttpURLConnection urlConnection = null;
                 try {
-                    URL url = new URL("http://192.168.0.4:8080/Labb4Server/rest/topic/getAllTopics?email=" + mail);
+                    URL url = new URL("http://nightloyd.eu:8080/Labb4Server/rest/topic/getAllTopics?email=" + mail);
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.connect();
