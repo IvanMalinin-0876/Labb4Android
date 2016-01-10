@@ -83,4 +83,8 @@ public class Model {
         this.userId = userId;
     }
 
+    public String getNewTopicName(){
+        return userId + "-" + topics.size();
+    }
+
 }
