@@ -19,7 +19,9 @@ import android.view.MenuItem;
 
 
 import com.example.isakaxel.labb4android.R;
+import com.example.isakaxel.labb4android.services.MyGcmListenerService;
 import com.example.isakaxel.labb4android.services.RegistrationIntentService;
+import com.example.isakaxel.labb4android.services.SendGcmService;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements
     private GoogleApiClient googleApiClient;
     private GoogleSignInAccount userAccount;
     private BroadcastReceiver gcmBroadcastReceiver;
+    private boolean appServerContact;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +77,13 @@ public class MainActivity extends AppCompatActivity implements
                 } else {
                     Log.i("sentToken", "Error");
                 }
+                appServerContact = sharedPreferences.getBoolean("serverLoginSuccess", false);
+                if(appServerContact) {
+                    enableUI(appServerContact);
+                }
             }
         };
+
     }
 
     @Override
@@ -95,10 +103,13 @@ public class MainActivity extends AppCompatActivity implements
                 Log.i("intentResult", "success");
                 userAccount = result.getSignInAccount();
                 if (hasPlayServices()) {
-                    Intent intent = new Intent(this, RegistrationIntentService.class);
-                    intent.putExtra("userEmail", userAccount.getEmail());
-                    startService(intent);
-                    enableUI(true);
+                    Intent regIntent = new Intent(this, RegistrationIntentService.class);
+                    regIntent.putExtra("userEmail", userAccount.getEmail());
+                    startService(regIntent);
+                    Intent sendLoginGcm = new Intent(this, SendGcmService.class);
+                    sendLoginGcm.putExtra("action", "login");
+                    sendLoginGcm.putExtra("userEmail", userAccount.getEmail());
+                    startService(sendLoginGcm);
                 }
             } else {
                 Log.i("intentResult", "" + result.getStatus().getStatusCode());

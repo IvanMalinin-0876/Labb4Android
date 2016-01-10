@@ -1,11 +1,10 @@
 package com.example.isakaxel.labb4android.activities;
 
-import android.app.Application;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,12 +14,26 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.isakaxel.labb4android.Model.JsonParser;
+import com.example.isakaxel.labb4android.Model.Util;
 import com.example.isakaxel.labb4android.R;
+import com.example.isakaxel.labb4android.Views.TopicViewModel;
+import com.example.isakaxel.labb4android.Views.UserViewModel;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class InboxActivity extends AppCompatActivity {
-    private TextView displayName;
+    private UserViewModel user;
+    private ConversationListAdapter conversationAdapter;
+    private RecyclerView inboxList;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -38,50 +51,44 @@ public class InboxActivity extends AppCompatActivity {
 
             }
         });
-
-        RecyclerView inboxList = (RecyclerView) findViewById(R.id.activity_inbox_recyclerView);
+        this.setTitle("My inbox");
+        inboxList = (RecyclerView) findViewById(R.id.activity_inbox_recyclerView);
         inboxList.setLayoutManager(new LinearLayoutManager(this));
 
-        ConversationListAdapter conversationAdapter = new ConversationListAdapter();
+        conversationAdapter = new ConversationListAdapter();
         inboxList.setAdapter(conversationAdapter);
 
-        for(int i = 0; i < 20; i++) {
-            conversationAdapter.addConversation("Conversation " + Integer.toString(i));
-        }
-
+        callRest(getIntent().getStringExtra("userEmail"));
     }
 
     private class ConversationListAdapter extends RecyclerView.Adapter<ConversationListViewHolder> {
 
-        private ArrayList<String> conversations;
+        private HashSet<TopicViewModel> topics;
 
         public ConversationListAdapter() {
-            conversations = new ArrayList<>();
+            topics = new HashSet<>();
         }
 
-        public void addConversation(String conversation) {
-            conversations.add(conversation);
+        public void addConversation(TopicViewModel topic) {
+            topics.add(topic);
             notifyDataSetChanged();
         }
 
-        public void removeConversation(String conversation) {
-            int pos = conversations.indexOf(conversation);
-            if(pos == -1) {
-                return;
-            }
-            conversations.remove(pos);
-            notifyItemRemoved(pos);
-            notifyItemRangeChanged(pos, conversations.size());
-        }
-
         @Override
-        public ConversationListViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public ConversationListViewHolder onCreateViewHolder(ViewGroup parent, final int viewType) {
             View view = getLayoutInflater().inflate(R.layout.list_item_conversation, parent, false);
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    String name = (String) v.getTag();
-                    Log.i("onClick", name);
+                    RecyclerView.ViewHolder holder = inboxList.getChildViewHolder(v);
+                    Log.i("onClick", "" + holder.getLayoutPosition());
+
+                    Intent conversationIntent = new Intent(v.getContext(), ConversationActivity.class);
+                    conversationIntent.putExtra("userEmail", getIntent().getExtras().getString("userEmail"));
+                    conversationIntent.putExtra("topic",
+                            JsonParser.getTopicJson(Util.getTopic(topics, holder.getLayoutPosition())));
+                    startActivity(conversationIntent);
+
                 }
             });
             return new ConversationListViewHolder(view);
@@ -89,20 +96,22 @@ public class InboxActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(ConversationListViewHolder holder, int position) {
-            String conversation = conversations.get(position);
-            holder.conversationTextView.setText(conversation);
-            holder.itemView.setTag(conversation);
+            String topicDisplayName;
+            if((topicDisplayName = Util.getTopic(topics, position).getDisplayName()) != null) {
+                holder.conversationTextView.setText(topicDisplayName);
+                holder.itemView.setTag(topicDisplayName);
 
-            if(position % 2 == 0) {
-                holder.conversationTextView.setBackgroundColor(Color.parseColor("#22000000"));
-            } else {
-                holder.conversationTextView.setBackground(null);
+                if (position % 2 == 0) {
+                    holder.conversationTextView.setBackgroundColor(Color.parseColor("#22000000"));
+                } else {
+                    holder.conversationTextView.setBackground(null);
+                }
             }
         }
 
         @Override
         public int getItemCount() {
-            return conversations.size();
+            return topics.size();
         }
     }
 
@@ -115,4 +124,50 @@ public class InboxActivity extends AppCompatActivity {
         }
     }
 
+    private void callRest(String email) {
+        final String mail = email;
+        new AsyncTask<Void, Void, String>() {
+
+            @Override
+            protected String doInBackground(Void... params) {
+                StringBuilder result = new StringBuilder();
+                HttpURLConnection urlConnection = null;
+                try {
+                    URL url = new URL("http://nightloyd.eu:8080/Labb4Server/rest/topic/getAllTopics?email=" + mail);
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.connect();
+                    InputStream content = (InputStream) urlConnection.getInputStream();
+                    BufferedReader in = new BufferedReader(new InputStreamReader(content));
+
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        result.append(line + "\n");
+                    }
+
+                    content.close();
+                    in.close();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    urlConnection.disconnect();
+                }
+
+                return result.toString();
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                // extract conversations and add them to the conversation adapter
+                user = JsonParser.getUserFromJson(result);
+                Log.i("Result", result);
+                for (TopicViewModel topicViewModel : user.getTopics()) {
+                    Log.i("Topic", topicViewModel.getDisplayName());
+                    conversationAdapter.addConversation(topicViewModel);
+                }
+            }
+        }.execute(null, null, null);
+    }
 }

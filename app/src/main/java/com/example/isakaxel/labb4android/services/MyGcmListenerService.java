@@ -8,10 +8,13 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.example.isakaxel.labb4android.R;
@@ -23,6 +26,7 @@ public class MyGcmListenerService extends GcmListenerService {
 
     private static final String TAG = "MyGcmListenerService";
 
+
     /**
      * Called when message is received.
      *
@@ -32,22 +36,32 @@ public class MyGcmListenerService extends GcmListenerService {
      */
     @Override
     public void onMessageReceived(String from, Bundle data) {
-        String message = data.getString("message");
-        String action = (String) data.get("action");
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String action = data.getString("action");
 
         switch (action){
             case "message":
                 // Lägg till meddelandet i rätt chat.
+                Intent broadcastMessage = new Intent("new-message-received");
+                broadcastMessage.putExtra("id", data.getLong("id"));
+                broadcastMessage.putExtra("message", data.getString("message"));
+                broadcastMessage.putExtra("to", data.getString("topic"));
+                broadcastMessage.putExtra("from", data.getString("email"));
+                        LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastMessage);
+                sendNotification(data.getString("message"));
                 break;
             case "invite":
                 // Subscribe:a till topic och lägg till chatten i chatt listan.
                 break;
+            case "loginResult":
+                sharedPreferences.edit().putBoolean("serverLoginSuccess",
+                        data.getString("result").equals("success")).apply();
+                Intent serverLogin = new Intent("serverLoginComplete");
+                LocalBroadcastManager.getInstance(this).sendBroadcast(serverLogin);
+                break;
             default:
                 break;
         }
-
-        Log.d(TAG, "From: " + from);
-        Log.d(TAG, "Message: " + message);
 
         if (from.startsWith("/topics/")) {
             // message received from some topic.
@@ -66,7 +80,6 @@ public class MyGcmListenerService extends GcmListenerService {
          * In some cases it may be useful to show a notification indicating to the user
          * that a message was received.
          */
-        sendNotification(message);
     }
 
     /**
@@ -83,7 +96,7 @@ public class MyGcmListenerService extends GcmListenerService {
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.cast_ic_notification_1)
-                .setContentTitle("New Message")
+                .setContentTitle("New MessageViewModel")
                 .setContentText(message)
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)

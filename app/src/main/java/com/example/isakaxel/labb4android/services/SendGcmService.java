@@ -26,18 +26,24 @@ public class SendGcmService extends IntentService {
         sendGcm(intent);
     }
 
+    /**
+     * Skapa en intent som först skapar en topic (userID + antaltopics man är med i).
+     * action för att skapa en topic = createChat.
+     * Sen när den är skapad ska en intent få en annan users email och skicka en invite.
+     * action för skicka invite = invite.
+     */
     private void sendGcm(Intent intent) {
         final String act = intent.getStringExtra("action");
         final String tpc = intent.getStringExtra("topic");
         final String message = intent.getStringExtra("message");
         final String mail = intent.getStringExtra("userEmail");
+        Log.i("sendGcm", mail);
         new AsyncTask<Void, Void, String>() {
             @Override
             protected String doInBackground(Void... params) {
                 String msg = "";
                 try {
                     Bundle data = new Bundle();
-                    Log.i("sendGcm", message);
                     data.putString("message", message);
                     data.putString("action", act);
                     data.putString("topic", tpc);

@@ -53,7 +53,7 @@ public class RegistrationIntentService extends IntentService {
     // Modify this method to associate the user's GCM registration token with
     // any server-side account maintained by your application.
     private void sendRegistrationToServer(String token, String userEmail) {
-        String topic = "/topics/myTopic";
+        String topic = "/topics/testtopic";
 
         try {
             GcmPubSub.getInstance(this).subscribe(token, topic, null);
@@ -62,59 +62,5 @@ public class RegistrationIntentService extends IntentService {
             Log.i("GcmPubSub", "unable to subscibe");
             e.printStackTrace();
         }
-
-        Log.i("regToServer", userEmail);
-        Intent loginIntent = new Intent(this, SendGcmService.class);
-        loginIntent.putExtra("userEmail", userEmail);
-        loginIntent.putExtra("message", "");
-        loginIntent.putExtra("action", "login");
-        // put topic
-
-        // TEST CODE FOR LOGIN AND CREATE CHAT ACTIONS!
-        /*new AsyncTask<Void, Void, String>() {
-            @Override
-            protected String doInBackground(Void... params) {
-                String msg = "";
-                try {
-                    Bundle data = new Bundle();
-                    data.putString("email", "isakaxel@gmail.com");
-                    data.putString("action","login");
-                    String id = Integer.toString(5);
-                    gcm.send("602319958990" + "@gcm.googleapis.com", id, data);
-                    msg = "Sent message";
-                } catch (IOException ex) {
-                    msg = "Error :" + ex.getMessage();
-                }
-                return msg;
-            }
-
-            @Override
-            protected void onPostExecute(String msg) {
-                Log.i("onPostExecute", msg);
-            }
-        }.execute(null, null, null);
-
-        new AsyncTask<Void, Void, String>() {
-            @Override
-            protected String doInBackground(Void... params) {
-                String msg = "";
-                try {
-                    Bundle data = new Bundle();
-                    data.putString("email", "isakaxel@gmail.com");
-                    data.putString("action","createChat");
-                    String id = Integer.toString(4);
-                    gcm.send("602319958990" + "@gcm.googleapis.com", id, data);
-                    msg = "Sent message";
-                } catch (IOException ex) {
-                    msg = "Error :" + ex.getMessage();
-                }
-                return msg;
-            }
-
-            @Override
-            protected void onPostExecute(String msg) {
-                Log.i("onPostExecute", msg);
-            }
-        }.execute(null, null, null);*/
     }
 }
