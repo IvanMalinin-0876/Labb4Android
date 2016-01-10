@@ -39,6 +39,8 @@ public class SendGcmService extends IntentService {
         final String tpc = intent.getStringExtra("topic");
         final String message = intent.getStringExtra("message");
         final String mail = intent.getStringExtra("userEmail");
+        final String tpcName = intent.getStringExtra("displayName");
+
         //final String otherUsersEmail = intent.getStringExtra("otherUsersEmail");
         Log.i("sendGcm", mail);
         new AsyncTask<Void, Void, String>() {
@@ -51,6 +53,7 @@ public class SendGcmService extends IntentService {
                     data.putString("action", act);
                     data.putString("topic", tpc);
                     data.putString("email", mail);
+                    data.putString("displayName", tpcName);
                     //data.putString("otherUsersEmail", otherUsersEmail);
                     Random rand = new Random();
                     String id = Integer.toString(rand.nextInt(1000000));

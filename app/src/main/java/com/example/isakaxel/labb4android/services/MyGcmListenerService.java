@@ -85,13 +85,13 @@ public class MyGcmListenerService extends GcmListenerService {
                 Intent serverLogin = new Intent("serverLoginComplete");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(serverLogin);
                 break;
-            case "createChatResult":
+            case "createTopicResult":
                 if (data.getString("result").equals("success")){
                     try {
                         String token = InstanceID.getInstance(this).getToken("602319958990", GoogleCloudMessaging.INSTANCE_ID_SCOPE
                                 , null);
-                        GcmPubSub.getInstance(this).subscribe(token, "/topics/" + data.getString("topicName"), null);
-                        model.addTopic(new Topic(data.getString("name"), data.getString("displayName")));
+                        GcmPubSub.getInstance(this).subscribe(token, "/topics/" + data.getString("topic"), null);
+                        model.addTopic(new Topic(data.getString("topic"), data.getString("displayName")));
                         broadcastMessage = new Intent("new-topic");
                         LocalBroadcastManager.getInstance(MyGcmListenerService.this).sendBroadcast(broadcastMessage);
                     } catch (IOException e){
@@ -100,12 +100,6 @@ public class MyGcmListenerService extends GcmListenerService {
                 }
             default:
                 break;
-        }
-
-        if (from.startsWith("/topics/")) {
-            // message received from some topic.
-        } else {
-            // normal downstream message.
         }
 
         /**
@@ -157,7 +151,7 @@ public class MyGcmListenerService extends GcmListenerService {
                 StringBuilder result = new StringBuilder();
                 HttpURLConnection urlConnection = null;
                 try {
-                    URL url = new URL("http://192.168.0.4:8080/Labb4Server/rest/topic/getTopic?topicName=" + name);
+                    URL url = new URL("http://nightloyd.eu:8080/Labb4Server/rest/topic/getTopic?topicName=" + name);
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.connect();

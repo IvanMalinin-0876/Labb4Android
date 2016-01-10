@@ -1,10 +1,15 @@
 package com.example.isakaxel.labb4android.activities;
 
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -23,6 +28,7 @@ import com.example.isakaxel.labb4android.R;
 import com.example.isakaxel.labb4android.Views.MessageViewModel;
 import com.example.isakaxel.labb4android.Views.TopicViewModel;
 import com.example.isakaxel.labb4android.Views.UserViewModel;
+import com.example.isakaxel.labb4android.services.SendGcmService;
 import com.google.android.gms.gcm.GcmPubSub;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
@@ -53,9 +59,7 @@ public class InboxActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent newMessageIntent = new Intent(view.getContext(), ConversationActivity.class);
-                newMessageIntent.putExtra("userEmail", model.getEmail());
-                startActivity(newMessageIntent);
+                startActivityForResult(new Intent(view.getContext(), NewTopicActivity.class), 1);
 
             }
         });
@@ -66,7 +70,33 @@ public class InboxActivity extends AppCompatActivity {
         conversationAdapter = new ConversationListAdapter(this, inboxList, model);
         inboxList.setAdapter(conversationAdapter);
 
+        LocalBroadcastManager.getInstance(this).registerReceiver(messageReceiver,
+                new IntentFilter("new-topic"));
+
         callRest(model.getEmail());
+    }
+
+    private BroadcastReceiver messageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i("onReceive", "hej");
+            conversationAdapter.notifyDataSetChanged();
+        }
+    };
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == 1) {
+            if(resultCode == Activity.RESULT_OK) {
+                Intent createTopicIntent = new Intent(this, SendGcmService.class);
+                createTopicIntent.putExtra("displayName", data.getStringExtra("displayName"));
+                createTopicIntent.putExtra("action", "createTopic");
+                createTopicIntent.putExtra("topic", Model.getInstance().getNewTopicName());
+                createTopicIntent.putExtra("userEmail", Model.getInstance().getEmail());
+                startService(createTopicIntent);
+            }
+        }
     }
 
     private void callRest(String email) {
@@ -79,7 +109,7 @@ public class InboxActivity extends AppCompatActivity {
                 StringBuilder result = new StringBuilder();
                 HttpURLConnection urlConnection = null;
                 try {
-                    URL url = new URL("http://192.168.0.4:8080/Labb4Server/rest/topic/getAllTopics?email=" + mail);
+                    URL url = new URL("http://nightloyd.eu:8080/Labb4Server/rest/topic/getAllTopics?email=" + mail);
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.connect();

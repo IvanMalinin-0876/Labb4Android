@@ -77,6 +77,9 @@
             android:label="@string/title_activity_conversation"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="stateHidden|adjustResize" />
+        <activity
+            android:name=".activities.NewTopicActivity"
+            android:exported="false"/>
     </application>
 
 </manifest>
