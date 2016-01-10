@@ -41,6 +41,10 @@ public class Model {
         return email;
     }
 
+    public void setEmail(String email){
+        this.email = email;
+    }
+
     public void addTopic(Topic topic){
         topics.add(topic);
     }
@@ -86,5 +90,6 @@ public class Model {
     public String getNewTopicName(){
         return userId + "-" + topics.size();
     }
+
 
 }

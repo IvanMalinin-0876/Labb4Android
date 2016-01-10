@@ -29,6 +29,7 @@ import com.example.isakaxel.labb4android.Views.MessageViewModel;
 import com.example.isakaxel.labb4android.Views.TopicViewModel;
 import com.example.isakaxel.labb4android.Views.UserViewModel;
 import com.example.isakaxel.labb4android.services.SendGcmService;
+import com.example.isakaxel.labb4android.services.SubscribeToTopicService;
 import com.google.android.gms.gcm.GcmPubSub;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
@@ -73,7 +74,7 @@ public class InboxActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(messageReceiver,
                 new IntentFilter("new-topic"));
 
-        callRest(model.getEmail());
+        callRest(model.getEmail(), this);
     }
 
     private BroadcastReceiver messageReceiver = new BroadcastReceiver() {
@@ -99,7 +100,7 @@ public class InboxActivity extends AppCompatActivity {
         }
     }
 
-    private void callRest(String email) {
+    private void callRest(String email, final InboxActivity activity) {
         final String mail = email;
         Log.i("inbox", "starting rest call");
         new AsyncTask<Void, Void, String>() {
@@ -109,7 +110,7 @@ public class InboxActivity extends AppCompatActivity {
                 StringBuilder result = new StringBuilder();
                 HttpURLConnection urlConnection = null;
                 try {
-                    URL url = new URL("http://nightloyd.eu:8080/Labb4Server/rest/topic/getAllTopics?email=" + mail);
+                    URL url = new URL("http://192.168.0.4:8080/Labb4Server/rest/topic/getAllTopics?email=" + mail);
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.connect();
@@ -150,13 +151,19 @@ public class InboxActivity extends AppCompatActivity {
                     Log.i("AddTopics", "" + model.getTopics().size());
                     conversationAdapter.notifyDataSetChanged();
                     model.setUserId(user.getId());
+                    /*Log.i("inbox", "" + user.getId());
                     try {
-                        String token = InstanceID.getInstance(InboxActivity.this).getToken("602319958990", GoogleCloudMessaging.INSTANCE_ID_SCOPE
+                        String token = InstanceID.getInstance(activity).getToken("602319958990", GoogleCloudMessaging.INSTANCE_ID_SCOPE
                                 , null);
-                        GcmPubSub.getInstance(InboxActivity.this).subscribe(token, "/topics/" + user.getId(), null);
+                        GcmPubSub.getInstance(activity).subscribe(token, "/topics/" + user.getId(), null);
+                        Log.i("inbox", "subscribed to: " + user.getId());
                     } catch (IOException e){
-
-                    }
+                        e.printStackTrace();
+                    }*/
+                    Intent subPubIntent = new Intent(activity, SubscribeToTopicService.class);
+                    Log.i("inbox", "" + subPubIntent);
+                    subPubIntent.putExtra("topicName", "" + user.getId());
+                    startService(subPubIntent);
                 }
             }
         }.execute(null, null, null);

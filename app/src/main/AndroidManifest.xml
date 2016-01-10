@@ -67,6 +67,8 @@
         <service
             android:name=".services.SendGcmService"
             android:exported="false" />
+        <service android:name=".services.SubscribeToTopicService"
+            android:exported="false" />
 
         <activity
             android:name=".activities.InboxActivity"

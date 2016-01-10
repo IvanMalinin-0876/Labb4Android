@@ -58,6 +58,7 @@ public class MyGcmListenerService extends GcmListenerService {
     public void onMessageReceived(String from, Bundle data) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String action = data.getString("action");
+        Log.i("GcmReceive", action);
         Model model = Model.getInstance();
         Intent broadcastMessage;
 
@@ -74,7 +75,7 @@ public class MyGcmListenerService extends GcmListenerService {
                     String token = InstanceID.getInstance(this).getToken("602319958990", GoogleCloudMessaging.INSTANCE_ID_SCOPE
                             , null);
                     GcmPubSub.getInstance(this).subscribe(token, "/topics/" + data.getString("topicName"), null);
-                    downloadTopic(data.getString("topicName"));
+                    downloadTopic(data.getString("topicName"), this);
                 } catch (IOException e){
 
                 }
@@ -93,7 +94,7 @@ public class MyGcmListenerService extends GcmListenerService {
                         GcmPubSub.getInstance(this).subscribe(token, "/topics/" + data.getString("topic"), null);
                         model.addTopic(new Topic(data.getString("topic"), data.getString("displayName")));
                         broadcastMessage = new Intent("new-topic");
-                        LocalBroadcastManager.getInstance(MyGcmListenerService.this).sendBroadcast(broadcastMessage);
+                        LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastMessage);
                     } catch (IOException e){
 
                     }
@@ -141,7 +142,7 @@ public class MyGcmListenerService extends GcmListenerService {
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
 
-    private void downloadTopic(String topicName) {
+    private void downloadTopic(String topicName, final MyGcmListenerService service) {
         final String name = topicName;
         Log.i("inbox", "starting rest call");
         new AsyncTask<Void, Void, String>() {
@@ -151,7 +152,7 @@ public class MyGcmListenerService extends GcmListenerService {
                 StringBuilder result = new StringBuilder();
                 HttpURLConnection urlConnection = null;
                 try {
-                    URL url = new URL("http://nightloyd.eu:8080/Labb4Server/rest/topic/getTopic?topicName=" + name);
+                    URL url = new URL("http://192.168.0.4:8080/Labb4Server/rest/topic/getTopic?topicName=" + name);
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.connect();
@@ -189,7 +190,7 @@ public class MyGcmListenerService extends GcmListenerService {
                     }
                     model.addTopic(new Topic(topic.getName(), topic.getDisplayName(), messages, topic.getMemberNames()));
                     Intent broadcastMessage = new Intent("new-topic");
-                    LocalBroadcastManager.getInstance(MyGcmListenerService.this).sendBroadcast(broadcastMessage);
+                    LocalBroadcastManager.getInstance(service).sendBroadcast(broadcastMessage);
                     sendNotification("You have been added to the topic" + topic.getDisplayName());
                 }
             }
