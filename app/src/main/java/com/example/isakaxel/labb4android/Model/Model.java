@@ -59,6 +59,16 @@ public class Model {
         return null;
     }
 
+    public Topic getTopicByName(String topicName) {
+        int i = 0;
+        for (Topic topic : topics) {
+            if(topic.getName().equals(topicName)) {
+                return topic;
+            }
+        }
+        return null;
+    }
+
     public void addMessageToTopic(String topicName, Message msg){
         Log.i("addMessage", "topic to find: " + topicName);
         for(Topic t : topics){

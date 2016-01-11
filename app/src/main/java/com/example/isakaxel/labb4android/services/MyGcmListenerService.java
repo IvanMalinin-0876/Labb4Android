@@ -26,6 +26,7 @@ import com.example.isakaxel.labb4android.R;
 import com.example.isakaxel.labb4android.Views.MessageViewModel;
 import com.example.isakaxel.labb4android.Views.TopicViewModel;
 import com.example.isakaxel.labb4android.activities.ConversationActivity;
+import com.example.isakaxel.labb4android.activities.InboxActivity;
 import com.example.isakaxel.labb4android.activities.MainActivity;
 import com.google.android.gms.gcm.GcmListenerService;
 import com.google.android.gms.gcm.GcmPubSub;
@@ -68,7 +69,8 @@ public class MyGcmListenerService extends GcmListenerService {
                 model.addMessageToTopic(data.getString("topic"), new Message(data.getLong("id"), data.getString("email"), data.getString("to"), data.getString("message")));
                 broadcastMessage = new Intent("new-message-received");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastMessage);
-                sendNotification(data.getString("message"));
+                sendMessageNotification(data);
+                //sendNotification(data.getString("message"));
                 break;
             case "invite":
                 try {
@@ -122,7 +124,7 @@ public class MyGcmListenerService extends GcmListenerService {
      * @param message GCM message received.
      */
     private void sendNotification(String message) {
-        Intent intent = new Intent(this, ConversationActivity.class);
+        Intent intent = new Intent(this, InboxActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                 PendingIntent.FLAG_ONE_SHOT);
@@ -132,6 +134,29 @@ public class MyGcmListenerService extends GcmListenerService {
                 .setSmallIcon(R.drawable.cast_ic_notification_1)
                 .setContentTitle("New Message")
                 .setContentText(message)
+                .setAutoCancel(true)
+                .setSound(defaultSoundUri)
+                .setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+    }
+
+    private void sendMessageNotification(Bundle data) {
+        Intent intent = new Intent(this, ConversationActivity.class);
+        intent.putExtra("topic", data.getString("topic"));
+        intent.putExtra("fromNotification", true);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+                PendingIntent.FLAG_ONE_SHOT);
+
+        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.cast_ic_notification_1)
+                .setContentTitle("New Message")
+                .setContentText(data.getString("message"))
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)
                 .setContentIntent(pendingIntent);

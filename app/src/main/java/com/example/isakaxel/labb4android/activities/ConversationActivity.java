@@ -61,9 +61,17 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         setContentView(R.layout.activity_conversation);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        int topicPosition = getIntent().getIntExtra("topic", 0);
         model = Model.getInstance();
-        topic = model.getTopic(topicPosition);
+        if(getIntent().getBooleanExtra("fromNotification", false)) {
+            topic = model.getTopicByName(getIntent().getStringExtra("topic"));
+        } else {
+            int topicPosition = getIntent().getIntExtra("topic", 0);
+            topic = model.getTopic(topicPosition);
+        }
+
+        //int topicPosition = getIntent().getIntExtra("topic", 0);
+        //model = Model.getInstance();
+        //topic = model.getTopic(topicPosition);
 
         this.setTitle(topic.getDisplayName());
 
