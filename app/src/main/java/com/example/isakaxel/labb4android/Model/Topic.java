@@ -2,6 +2,7 @@ package com.example.isakaxel.labb4android.Model;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by loyde on 2016-01-10.
@@ -9,9 +10,9 @@ import java.util.HashSet;
 public class Topic {
     private String name, displayName;
     private ArrayList<Message> messages;
-    private HashSet<String> memberNames;
+    private Set<String> memberNames;
 
-    public Topic(String name, String displayName, ArrayList<Message> messages, HashSet<String> memberNames){
+    public Topic(String name, String displayName, ArrayList<Message> messages, Set<String> memberNames){
         this.name = name;
         this.displayName = displayName;
         this.memberNames = memberNames;
@@ -49,7 +50,7 @@ public class Topic {
         messages.add(msg);
     }
 
-    public HashSet<String> getMemberNames() {
+    public Set<String> getMemberNames() {
         return memberNames;
     }
 

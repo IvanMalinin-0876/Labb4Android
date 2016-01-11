@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -14,9 +15,9 @@ import java.util.TreeSet;
 public class TopicViewModel {
     private String name, displayName;
     private ArrayList<MessageViewModel> messages;
-    private HashSet<String> memberNames;
+    private Set<String> memberNames;
 
-    public TopicViewModel(String name, String displayName, ArrayList<MessageViewModel> messages, HashSet<String> memberNames) {
+    public TopicViewModel(String name, String displayName, ArrayList<MessageViewModel> messages, Set<String> memberNames) {
         this.name = name;
         this.displayName = displayName;
         this.messages = messages;
@@ -35,7 +36,7 @@ public class TopicViewModel {
         return messages;
     }
 
-    public HashSet<String> getMemberNames() {
+    public Set<String> getMemberNames() {
         return memberNames;
     }
 }

@@ -74,12 +74,16 @@ public class MyGcmListenerService extends GcmListenerService {
                 break;
             case "invite":
                 try {
+                    Log.i("CHECKING", "1");
                     String token = InstanceID.getInstance(this).getToken("602319958990", GoogleCloudMessaging.INSTANCE_ID_SCOPE
                             , null);
-                    GcmPubSub.getInstance(this).subscribe(token, "/topics/" + data.getString("topicName"), null);
-                    downloadTopic(data.getString("topicName"), this);
-                } catch (IOException e){
+                    Log.i("CHECKING", "2");
+                    GcmPubSub.getInstance(this).subscribe(token, "/topics/" + data.getString("topic"), null);
+                    Log.i("CHECKING", "3");
+                    downloadTopic(data.getString("topic"), this);
 
+                } catch (IOException e){
+                    e.printStackTrace();
                 }
                 break;
             case "loginResult":
@@ -167,7 +171,7 @@ public class MyGcmListenerService extends GcmListenerService {
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
 
-    private void downloadTopic(String topicName, final MyGcmListenerService service) {
+    private void downloadTopic(final String topicName, final MyGcmListenerService service) {
         final String name = topicName;
         Log.i("inbox", "starting rest call");
         new AsyncTask<Void, Void, String>() {
@@ -177,7 +181,7 @@ public class MyGcmListenerService extends GcmListenerService {
                 StringBuilder result = new StringBuilder();
                 HttpURLConnection urlConnection = null;
                 try {
-                    URL url = new URL("http://nightloyd.eu:8080/Labb4Server/rest/topic/getTopic?topicName=" + name);
+                    URL url = new URL("http://192.168.0.4:8080/Labb4Server/rest/topic/getTopic?topicName=" + name);
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.connect();
@@ -205,18 +209,22 @@ public class MyGcmListenerService extends GcmListenerService {
             @Override
             protected void onPostExecute(String result) {
                 // extract conversations and add them to the conversation adapter
+                Log.i("CHECKING", "4");
+                Log.i("Result", " " + result);
                 TopicViewModel topic = JsonParser.getTopicFromJson(result);
-                Log.i("Result", result);
                 if (topic != null) {
+                    Log.i("CHECKING", "5");
                     Model model = Model.getInstance();
                     ArrayList<Message> messages = new ArrayList<Message>();
                     for (MessageViewModel mvm : topic.getMessages()) {
                         messages.add(new Message(mvm.getId(), mvm.getFrom(), mvm.getTo(), mvm.getMsg()));
                     }
                     model.addTopic(new Topic(topic.getName(), topic.getDisplayName(), messages, topic.getMemberNames()));
+                    Log.i("CHECKING", "6");
                     Intent broadcastMessage = new Intent("new-topic");
                     LocalBroadcastManager.getInstance(service).sendBroadcast(broadcastMessage);
                     sendNotification("You have been added to the topic" + topic.getDisplayName());
+                    Log.i("CHECKING", "8");
                 }
             }
         }.execute(null, null, null);
